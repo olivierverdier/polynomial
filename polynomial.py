@@ -117,7 +117,7 @@ class Polynomial (object):
     def mul(a,b): return a*b
     return reduce(mul, [self]*n)
 
-  class ConstantPolynomialException(Exception):
+  class ConstantPolynomialError(Exception):
     """Exception for constant polynomials"""
 
   def companion(self):
@@ -125,7 +125,7 @@ class Polynomial (object):
     from numpy import eye
     degree = self.degree()
     if degree == 0:
-      raise self.ConstantPolynomialException, "Constant polynomials have no companion matrix"
+      raise self.ConstantPolynomialError, "Constant polynomials have no companion matrix"
     companion = eye(degree, degree, -1, dtype=complex)
     companion[:,-1] = -self.coeffs[:degree]/self.coeffs[degree]
     return companion
@@ -135,7 +135,7 @@ class Polynomial (object):
     from numpy.linalg import eigvals
     try:
       return eigvals(self.companion())
-    except self.ConstantPolynomialException:
+    except self.ConstantPolynomialError:
       return array([])
 
   resolution = 200
@@ -155,13 +155,13 @@ class Polynomial (object):
     return reduce(simpleMult, reversed(self.coeffs))
 
   epsilon = 1e-10
-  def isZero(self):
+  def is_zero(self):
     """Test for equality with zero (up to epsilon)"""
     return all(abs(coeff) < self.epsilon for coeff in self.coeffs)
 
   def __eq__(self, other):
     """P1 == P2"""
-    return (self - other).isZero()
+    return (self - other).is_zero()
 
   def __ne__(self, other):
     """P1 != P2"""
@@ -173,7 +173,7 @@ class Polynomial (object):
 
   # this one is for fun only
   enlargeCoeff = .2
-  def plotZeros(self):
+  def plot_zeros(self):
     """Plot the zeros in the complex plane."""
     zeros = self.zeros()
     from numpy import real, imag, diff
@@ -201,12 +201,14 @@ class Polynomial (object):
       coeffs = coeffs + 1j*randomCoeffs(len(coeffs))
     return cls(coeffs)
 
+  random_real = random
+
   @classmethod
-  def randomC(cls, *args):
+  def random_complex(cls, *args):
     """Create a random complex polynomial"""
     return cls.random(comp=True, *args)
 
-  def testZeros(self):
+  def test_zeros(self):
     """Check that we are really zero on the zeros (up to epsilon)"""
     return all(self(z) < self.epsilon for z in self.zeros())
 
@@ -229,8 +231,8 @@ X = Polynomial((0,1))
 # here we do some tests that will not be run when importing this module
 if __name__ == "__main__":
 
-  assert Zero.isZero()
-  assert Polynomial((0,0)).isZero()
+  assert Zero.is_zero()
+  assert Polynomial((0,0)).is_zero()
   assert Zero.degree() == 0
   assert One.degree() == 0
   assert not One.zeros() # constants have no zero
@@ -257,7 +259,7 @@ if __name__ == "__main__":
   assert (X**2).differentiate() == 2*X
   assert (X-1)*(X+1) == X**2 - 1
 
-  for p in (Zero, One, X, Polynomial.random(), Polynomial.randomC()):
+  for p in (Zero, One, X, Polynomial.random_real(), Polynomial.random_complex()):
     assert p * One == p
     assert p * Zero == Zero
     assert p + Zero == p
@@ -279,7 +281,7 @@ if __name__ == "__main__":
       assert 2*p == 3*p
     assert p + One == p + 1
     assert p + 0 == p
-    assert p.testZeros()      
+    assert p.test_zeros()      
   
   # tests with some specific polynomials
   p1 = Polynomial((2.,0,3.,0)) # 2 + 3x^2
