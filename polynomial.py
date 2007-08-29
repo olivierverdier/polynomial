@@ -21,13 +21,15 @@ def castScalars(method):
 class Polynomial (object):
   """
   Model class for a polynomial.
-  The usual operations (+, *, **) are provided
-  Comparison is defined
+  The usual operations (+, -, *, **) are provided
+  Comparison with other polynomials is defined
+  Scalars are automatically cast to polynomials
   Examples of the variations on the syntax:
     Polynomial(3)
     Polynomial([3,4])
     P = 1 + X + X**2 + 4*X**4
-    P(3)
+    P(3)  # value at 3
+    P[10] # 10th coefficient (zero)
   """
   def __init__(self, coeffs):
     """
@@ -43,11 +45,11 @@ class Polynomial (object):
 
   def __str__(self):
     """Pretty presentation (with print)"""
-    return ' + '.join("%sx^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:self.degree()+1]))
+    return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:len(self)]))
 
   def __repr__(self):
     """Make it easy to create a new polynomial from of this output"""
-    return "Polynomial(%s)" % str(list(self.coeffs[:self.degree()+1]))
+    return "Polynomial(%s)" % str(list(self.coeffs[:len(self)]))
 
   def __getitem__(self, index):
     """Simulate the [] access and return zero for indices out of range"""
@@ -61,18 +63,22 @@ class Polynomial (object):
     """Allow to change an arbitrary coefficient (even out of range)"""
     raise NotImplementedError
 
-  def degree(self):
-    """Degree of the polynomial (biggest non zero coefficient)"""
+  def __len__(self):
+    """"Length" of the polynomial (degree + 1)"""
     for index, coeff in enumerate(reversed(list(self.coeffs))):
       if coeff != 0:
         break
-    return len(self.coeffs)-index-1
+    return len(self.coeffs)-index
+
+  def degree(self):
+    """Degree of the polynomial (biggest non zero coefficient)"""
+    return len(self) - 1
 
   @castScalars
   def __add__(self, other):
     """P1 + P2"""
-    maxDegree = max(self.degree(), other.degree())
-    return Polynomial([self[index] + other[index] for index in range(maxDegree+1)])
+    maxLength = max(len(self), len(other))
+    return Polynomial([self[index] + other[index] for index in range(maxLength)])
 
   def __radd__(self, other):
     """Addition with scalars"""
@@ -92,12 +98,14 @@ class Polynomial (object):
   @castScalars
   def __mul__(self, other):
     """P1 * P2"""
-    # degree of the resulting polynomial:
-    D = self.degree() + other.degree()
-    newCoeffs = numpy.zeros(D+1, dtype=complex)
-    for i in range(len(newCoeffs)):
+    # length of the resulting polynomial:
+    length = len(self) + len(other)
+    newCoeffs = []
+    for i in range(length):
+      newCoeff = 0
       for j in range(i+1):
-        newCoeffs[i] += self[j]*other[i-j]
+        newCoeff += self[j]*other[i-j]
+      newCoeffs.append(newCoeff)
     return Polynomial(newCoeffs)
 
   def __rmul__(self, other):
@@ -109,12 +117,15 @@ class Polynomial (object):
     def mul(a,b): return a*b
     return reduce(mul, [self]*n)
 
+  class ConstantPolynomialException(Exception):
+    """Exception for constant polynomials"""
+
   def companion(self):
     """Companion matrix"""
     from numpy import eye
     degree = self.degree()
     if degree == 0:
-      raise Exception, "Polynomial must have order 1 at least"
+      raise self.ConstantPolynomialException, "Constant polynomials have no companion matrix"
     companion = eye(degree, degree, -1, dtype=complex)
     companion[:,-1] = -self.coeffs[:degree]/self.coeffs[degree]
     return companion
@@ -124,16 +135,16 @@ class Polynomial (object):
     from numpy.linalg import eigvals
     try:
       return eigvals(self.companion())
-    except Exception:
+    except self.ConstantPolynomialException:
       return array([])
 
   resolution = 200
   def plot(self, a, b):
     """Plot the polynomial between a and b"""
     xx = linspace(a, b, self.resolution)
-    plot(xx, [self.eval(x) for x in xx])
+    plot(xx, [self(x) for x in xx])
 
-  def eval(self, x):
+  def __call__(self, x):
     """Evaluate the numerical value of the polynomial at x"""
     # note: the following technique certainly obfuscates the code...
     # just take it as an example of dynamic functions (called "closures")
@@ -143,12 +154,10 @@ class Polynomial (object):
       return a*x + b
     return reduce(simpleMult, reversed(self.coeffs))
 
-  __call__ = eval # to allow the syntax p(x)
-
   epsilon = 1e-10
   def isZero(self):
     """Test for equality with zero (up to epsilon)"""
-    return not any([abs(coeff) > self.epsilon for coeff in self.coeffs])
+    return all(abs(coeff) < self.epsilon for coeff in self.coeffs)
 
   def __eq__(self, other):
     """P1 == P2"""
@@ -190,7 +199,7 @@ class Polynomial (object):
     coeffs = randomCoeffs(numpy.random.randint(N))
     if comp:
       coeffs = coeffs + 1j*randomCoeffs(len(coeffs))
-    return Polynomial(coeffs)
+    return cls(coeffs)
 
   @classmethod
   def randomC(cls, *args):
@@ -204,43 +213,51 @@ class Polynomial (object):
 class TrigPolynomial (Polynomial):
   """Model for a trigonometric polynomial"""
 
-  def eval(self, theta):
+  def __call__(self, theta):
     from numpy import exp
     return Polynomial.eval(self, exp(1j*theta))
 
-  __call__ = eval # unfortunately this has to be done once more
+for cls in (Polynomial, TrigPolynomial):
+  cls.eval = cls.__call__ # aliases eval = __call__
 
-Zero = Polynomial([]) # the zero polynomial (extreme case with an empty coeff list)
+Zero = Polynomial(()) # the zero polynomial (extreme case with an empty coeff list)
 
-One = Polynomial(complex(1)) # the unit polynomial (has to be complex!)
+One = Polynomial((1,)) # the unit polynomial
 
-X = Polynomial([0,complex(1)])
+X = Polynomial((0,1))
 
 # here we do some tests that will not be run when importing this module
 if __name__ == "__main__":
 
   assert Zero.isZero()
-  assert Polynomial([0,0]).isZero()
+  assert Polynomial((0,0)).isZero()
   assert Zero.degree() == 0
   assert One.degree() == 0
   assert not One.zeros() # constants have no zero
-  assert One == Polynomial([1,0,0,0])
+  assert One == Polynomial((1,0,0,0))
   assert One == Polynomial(1) # creation from scalars
 
   assert X.degree() == 1
   assert (X+X).degree()==1
-  assert Polynomial([0]) != Polynomial([0,2])
+  assert len(One) == 1
+  assert len(X) == 2
 
-  assert Zero(1) == 0
-  assert One(1) == 1
+  assert Polynomial((0,)) != Polynomial((0,2))
+
+  r = numpy.random.random()
+  assert Zero(r) == 0
+  assert One(r) == 1
+  assert X(r) == r
+
   assert Zero == 0
   assert One == 1
-  assert not 2*Zero != 3*Zero # testing __ne__
+  assert not 2*Zero != 3*Zero
 
   assert X.differentiate() == 1
   assert (X**2).differentiate() == 2*X
+  assert (X-1)*(X+1) == X**2 - 1
 
-  for p in (Zero, One, Polynomial.random(), Polynomial.randomC(), X):
+  for p in (Zero, One, X, Polynomial.random(), Polynomial.randomC()):
     assert p * One == p
     assert p * Zero == Zero
     assert p + Zero == p
@@ -265,8 +282,8 @@ if __name__ == "__main__":
     assert p.testZeros()      
   
   # tests with some specific polynomials
-  p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
-  p2 = Polynomial([3.,2.]) #3 + 2x
+  p1 = Polynomial((2.,0,3.,0)) # 2 + 3x^2
+  p2 = Polynomial((3.,2.)) #3 + 2x
 
   assert p1.degree() == 2
   assert p1[4] == 0 # index out of range
