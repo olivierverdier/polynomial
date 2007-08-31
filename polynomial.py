@@ -152,10 +152,14 @@ class Polynomial (object):
   def plot(self, a, b):
     """Plot the polynomial between a and b"""
     xx = linspace(a, b, self.resolution)
-    plot(xx, [self(x) for x in xx])
+    # here we use the fact that evaluation works on arrays:
+    plot(xx, self(xx))
 
   def __call__(self, x):
-    """Evaluate the numerical value of the polynomial at x"""
+    """
+    Numerical value of the polynomial at x
+      x may be a scalar or an array
+    """
     # note: the following technique certainly obfuscates the code...
     # just take it as an example of dynamic functions (called "closures")
 
@@ -166,17 +170,17 @@ class Polynomial (object):
     return reduce(simpleMult, reversed(self.coeffs), 0)
 
   epsilon = 1e-10
-  def is_zero(self):
-    """Test for equality with zero (up to epsilon)"""
-    return all(abs(coeff) < self.epsilon for coeff in self.coeffs)
+  def __nonzero__(self):
+    """Test for difference from zero (up to epsilon)"""
+    return any(abs(coeff) > self.epsilon for coeff in self.coeffs)
 
   def __eq__(self, other):
     """P1 == P2"""
-    return (self - other).is_zero()
+    return not (self - other)
 
   def __ne__(self, other):
     """P1 != P2"""
-    return not self == other
+    return not (self == other)
 
   def differentiate(self):
     """Symbolic differentiation"""
@@ -242,8 +246,8 @@ X = Polynomial((0,1))
 # here we do some tests that will not be run when importing this module
 if __name__ == "__main__":
 
-  assert Zero.is_zero()
-  assert Polynomial((0,0)).is_zero()
+  assert not Zero
+  assert not Polynomial((0,0))
   assert Zero.degree() == 0
   assert One.degree() == 0
   assert not One.zeros(), "Constants have no zero"
@@ -289,10 +293,12 @@ if __name__ == "__main__":
     assert (p+p)+p == p+(p+p)
     assert p-p == Zero
     assert p+p == 2*p
-    if not p == Zero:
+    if p != Zero:
       assert 2*p != 3*p
+      assert p
     else:
       assert 2*p == 3*p
+      assert not p
     assert p + One == p + 1
     assert p + 0 == p
     assert p.test_zeros()
