@@ -1,5 +1,7 @@
 # -*- coding: UTF-8 -*-
 
+__version__ = "$Id"
+
 """
 Classes to model polynomial and trigonometric polynomials.
 It also defines a Zero and One polynomials
