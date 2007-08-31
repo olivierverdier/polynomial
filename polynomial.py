@@ -44,7 +44,7 @@ class Polynomial (object):
   def __init__(self, coeffs):
     """
     Create a polynomial from a list or array of coefficients
-    There may be additional leading zeros.
+    There may be additional trailing zeros.
     """
     # we allow the creation of polynomials from scalars:
     if numpy.isscalar(coeffs):
@@ -63,7 +63,7 @@ class Polynomial (object):
 
   def __getitem__(self, index):
     """Simulate the [] access and return zero for indices out of range"""
-    # note: this method is used in the addition operation
+    # note: this method is used in the addition and multiplication operations
     try:
       return self.coeffs[index]
     except IndexError:
