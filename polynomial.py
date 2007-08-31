@@ -10,7 +10,7 @@ import numpy
 from numpy import array, arange, pi
 from pylab import linspace, plot
 
-def castScalars(method):
+def cast_scalars(method):
   """Decorator used to cast a scalar to a polynomial"""
   def newMethod(self, other):
     if numpy.isscalar(other):
@@ -22,14 +22,24 @@ class Polynomial (object):
   """
   Model class for a polynomial.
   The usual operations (+, -, *, **) are provided
-  Comparison with other polynomials is defined
+  Comparison between polynomials is defined
   Scalars are automatically cast to polynomials
+  Trailing zeros are allowed in the coefficients
   Examples of the variations on the syntax:
     Polynomial(3)
-    Polynomial([3,4])
-    P = 1 + X + X**2 + 4*X**4
+    Polynomial([3,4,1])
+    Polynomial([3,4,1,0,0])
+    P = 3 + 4*X + X**2
     P(3)  # value at 3
     P[10] # 10th coefficient (zero)
+
+  Remarks:
+  1. One may use any ring for the coefficient of this polynomial class
+  2. the evaluation method works automatically on arrays
+  3. the polynomial is itself a ring, and may be used as coefficients in an array:
+    AP = numpy.array([p1,p2])
+    numpy.dot(AP, AP)
+  (An application could be to compute the characteristic polynomial of a matrix.)
   """
   def __init__(self, coeffs):
     """
@@ -74,7 +84,7 @@ class Polynomial (object):
     """Degree of the polynomial (biggest non zero coefficient)"""
     return len(self) - 1
 
-  @castScalars
+  @cast_scalars
   def __add__(self, other):
     """P1 + P2"""
     maxLength = max(len(self), len(other))
@@ -95,7 +105,7 @@ class Polynomial (object):
   def __rsub__(self, other):
     return -(self - other)
 
-  @castScalars
+  @cast_scalars
   def __mul__(self, other):
     """P1 * P2"""
     # length of the resulting polynomial:
@@ -152,7 +162,8 @@ class Polynomial (object):
     # Notice how the following "sub-function" depends on x:
     def simpleMult(a, b):
       return a*x + b
-    return reduce(simpleMult, reversed(self.coeffs))
+    # the third argument is to take care of constant polynomials!
+    return reduce(simpleMult, reversed(self.coeffs), 0)
 
   epsilon = 1e-10
   def is_zero(self):
@@ -172,7 +183,7 @@ class Polynomial (object):
     return Polynomial((arange(len(self.coeffs))*self.coeffs)[1:])
 
   # this one is for fun only
-  enlargeCoeff = .2
+  enlarge_coeff = .2
   def plot_zeros(self):
     """Plot the zeros in the complex plane."""
     zeros = self.zeros()
@@ -182,7 +193,7 @@ class Polynomial (object):
 
     # now we enlarge the graph a bit
     zone = array(axis()).reshape(2,2)
-    padding = self.enlargeCoeff * diff(zone)
+    padding = self.enlarge_coeff * diff(zone)
     zone += numpy.hstack((-padding, padding))
     axis(zone.reshape(-1))    
 
@@ -194,11 +205,11 @@ class Polynomial (object):
     Coefficients are in [-.5, .5] (+1j[-.5, .5])
       comp – whether the polynomial may have complex coefficients
     """
-    def randomCoeffs(size):
+    def random_coeffs(size):
       return numpy.random.rand(size) - .5
-    coeffs = randomCoeffs(numpy.random.randint(N))
+    coeffs = random_coeffs(numpy.random.randint(N))
     if comp:
-      coeffs = coeffs + 1j*randomCoeffs(len(coeffs))
+      coeffs = coeffs + 1j*random_coeffs(len(coeffs))
     return cls(coeffs)
 
   random_real = random
@@ -235,9 +246,9 @@ if __name__ == "__main__":
   assert Polynomial((0,0)).is_zero()
   assert Zero.degree() == 0
   assert One.degree() == 0
-  assert not One.zeros() # constants have no zero
+  assert not One.zeros(), "Constants have no zero"
   assert One == Polynomial((1,0,0,0))
-  assert One == Polynomial(1) # creation from scalars
+  assert One == Polynomial(1), "Creation from scalars"
 
   assert X.degree() == 1
   assert (X+X).degree()==1
@@ -258,6 +269,9 @@ if __name__ == "__main__":
   assert X.differentiate() == 1
   assert (X**2).differentiate() == 2*X
   assert (X-1)*(X+1) == X**2 - 1
+  
+  myLength = 10
+  myArray = numpy.random.rand(myLength)
 
   for p in (Zero, One, X, Polynomial.random_real(), Polynomial.random_complex()):
     assert p * One == p
@@ -281,14 +295,15 @@ if __name__ == "__main__":
       assert 2*p == 3*p
     assert p + One == p + 1
     assert p + 0 == p
-    assert p.test_zeros()      
+    assert p.test_zeros()
+    assert isinstance(p(myArray), numpy.ndarray), "Evaluation should work on arrays"
   
   # tests with some specific polynomials
   p1 = Polynomial((2.,0,3.,0)) # 2 + 3x^2
   p2 = Polynomial((3.,2.)) #3 + 2x
 
   assert p1.degree() == 2
-  assert p1[4] == 0 # index out of range
+  assert p1[4] == 0, "Index out of range should return zero"
   assert p1[0] == 2
   assert p1+p2 == Polynomial([5,2,3])
   assert p1.differentiate() == Polynomial([0,6])
