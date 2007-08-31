@@ -54,7 +54,7 @@ class Polynomial (object):
     self.coeffs = array(coeffs)
 
   def __str__(self):
-    """Pretty presentation (with print)"""
+    """Pretty presentation"""
     return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:len(self)]))
 
   def __repr__(self):
@@ -110,12 +110,7 @@ class Polynomial (object):
     """P1 * P2"""
     # length of the resulting polynomial:
     length = len(self) + len(other)
-    newCoeffs = []
-    for i in range(length):
-      newCoeff = 0
-      for j in range(i+1):
-        newCoeff += self[j]*other[i-j]
-      newCoeffs.append(newCoeff)
+    newCoeffs = [numpy.sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
     return Polynomial(newCoeffs)
 
   def __rmul__(self, other):
@@ -142,11 +137,10 @@ class Polynomial (object):
 
   def zeros(self):
     """Compute the zeros via the companion matrix"""
-    from numpy.linalg import eigvals
     try:
-      return eigvals(self.companion())
+      return list(numpy.linalg.eigvals(self.companion()))
     except self.ConstantPolynomialError:
-      return array([])
+      return []
 
   resolution = 200
   def plot(self, a, b):
@@ -237,21 +231,21 @@ class TrigPolynomial (Polynomial):
 for cls in (Polynomial, TrigPolynomial):
   cls.eval = cls.__call__ # aliases eval = __call__
 
-Zero = Polynomial(()) # the zero polynomial (extreme case with an empty coeff list)
+Zero = Polynomial([]) # the zero polynomial (extreme case with an empty coeff list)
 
-One = Polynomial((1,)) # the unit polynomial
+One = Polynomial([1]) # the unit polynomial
 
-X = Polynomial((0,1))
+X = Polynomial([0,1])
 
 # here we do some tests that will not be run when importing this module
 if __name__ == "__main__":
 
   assert not Zero
-  assert not Polynomial((0,0))
+  assert not Polynomial([0,0])
   assert Zero.degree() == 0
   assert One.degree() == 0
   assert not One.zeros(), "Constants have no zero"
-  assert One == Polynomial((1,0,0,0))
+  assert One == Polynomial([1,0,0,0])
   assert One == Polynomial(1), "Creation from scalars"
 
   assert X.degree() == 1
@@ -259,7 +253,7 @@ if __name__ == "__main__":
   assert len(One) == 1
   assert len(X) == 2
 
-  assert Polynomial((0,)) != Polynomial((0,2))
+  assert Polynomial((0,)) != Polynomial([0,2])
 
   r = numpy.random.random()
   assert Zero(r) == 0
@@ -288,9 +282,9 @@ if __name__ == "__main__":
     assert p * 0 == Zero
     assert 0 * p == Zero
     assert 2 * p == p * 2
-    assert p**2 == p*p
-    assert (p*p)*p == p*(p*p)
-    assert (p+p)+p == p+(p+p)
+    assert p**2 == p * p
+    assert (p * p) * p == p * (p * p)
+    assert (p + p) + p == p + (p + p)
     assert p-p == Zero
     assert p+p == 2*p
     if p != Zero:
@@ -302,11 +296,12 @@ if __name__ == "__main__":
     assert p + One == p + 1
     assert p + 0 == p
     assert p.test_zeros()
+    assert isinstance(p.zeros(), list) # a list, not an array
     assert isinstance(p(myArray), numpy.ndarray), "Evaluation should work on arrays"
   
   # tests with some specific polynomials
-  p1 = Polynomial((2.,0,3.,0)) # 2 + 3x^2
-  p2 = Polynomial((3.,2.)) #3 + 2x
+  p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
+  p2 = Polynomial([3.,2.]) #3 + 2x
 
   assert p1.degree() == 2
   assert p1[4] == 0, "Index out of range should return zero"
