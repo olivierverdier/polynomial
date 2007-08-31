@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-__version__ = "$Id"
+__version__ = "$Id: polynomial.py 15 2007-08-31 20:33:34Z olivier $"
 
 """
 Classes to model polynomial and trigonometric polynomials.
