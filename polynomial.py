@@ -90,9 +90,7 @@ class Polynomial (object):
     maxLength = max(len(self), len(other))
     return Polynomial([self[index] + other[index] for index in range(maxLength)])
 
-  def __radd__(self, other):
-    """Addition with scalars"""
-    return self + other
+  __radd__ = __add__
 
   def __neg__(self):
     """-P"""
@@ -113,9 +111,7 @@ class Polynomial (object):
     newCoeffs = [numpy.sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
     return Polynomial(newCoeffs)
 
-  def __rmul__(self, other):
-    """Multiplication from the left (only for scalars)"""
-    return self * other
+  __rmul__ = __mul__
 
   def __pow__(self, n):
     """P**n"""
