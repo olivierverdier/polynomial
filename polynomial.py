@@ -1,16 +1,20 @@
 # -*- coding: UTF-8 -*-
+from __future__ import division # to avoid the mess with integer divisions
 
-__version__ = "$Id: polynomial.py 15 2007-08-31 20:33:34Z olivier $"
+__all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
+
+__version__ = "$Id: polynomial.py 16 2007-09-02 16:03:21Z olivier $"
+
 
 """
 Classes to model polynomial and trigonometric polynomials.
 It also defines a Zero and One polynomials
 """
-from __future__ import division # to avoid the mess with integer divisions
 
 import numpy
-from numpy import array, arange, pi
-from pylab import linspace, plot
+import pylab
+from numpy import array
+
 
 def cast_scalars(method):
   """Decorator used to cast a scalar to a polynomial"""
@@ -128,7 +132,7 @@ class Polynomial (object):
     from numpy import eye
     degree = self.degree()
     if degree == 0:
-      raise self.ConstantPolynomialError, "Constant polynomials have no companion matrix"
+      raise self.ConstantPolynomialError("Constant polynomials have no companion matrix")
     companion = eye(degree, degree, -1, dtype=complex)
     companion[:,-1] = -self.coeffs[:degree]/self.coeffs[degree]
     return companion
@@ -143,9 +147,9 @@ class Polynomial (object):
   resolution = 200
   def plot(self, a, b):
     """Plot the polynomial between a and b"""
-    xx = linspace(a, b, self.resolution)
+    xx = pylab.linspace(a, b, self.resolution)
     # here we use the fact that evaluation works on arrays:
-    plot(xx, self(xx))
+    pylab.plot(xx, self(xx))
 
   def __call__(self, x):
     """
@@ -176,7 +180,7 @@ class Polynomial (object):
 
   def differentiate(self):
     """Symbolic differentiation"""
-    return Polynomial((arange(len(self.coeffs))*self.coeffs)[1:])
+    return Polynomial((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
 
   # this one is for fun only
   enlarge_coeff = .2
@@ -226,8 +230,11 @@ class TrigPolynomial (Polynomial):
     from numpy import exp
     return Polynomial.eval(self, exp(1j*theta))
 
+del cast_scalars
+
 for cls in (Polynomial, TrigPolynomial):
   cls.eval = cls.__call__ # aliases eval = __call__
+del cls
 
 Zero = Polynomial([]) # the zero polynomial (extreme case with an empty coeff list)
 
@@ -235,9 +242,10 @@ One = Polynomial([1]) # the unit polynomial
 
 X = Polynomial([0,1])
 
-# here we do some tests that will not be run when importing this module
-if __name__ == "__main__":
-
+if __name__ != "__main__": # when importing:
+  # a bit of cleaning up
+  del array, numpy, pylab, division
+else: # here we do some tests that will not be run when importing this module
   assert not Zero
   assert not Polynomial([0,0])
   assert Zero.degree() == 0
@@ -309,4 +317,4 @@ if __name__ == "__main__":
   assert p1(2) == 14
   assert p1*p2 == Polynomial([6., 4., 9., 6.])
   tp = TrigPolynomial([-1,1])
-  assert abs(tp(pi/2) - (-1+1j)) < 1e-10
+  assert abs(tp(numpy.pi/2) - (-1+1j)) < 1e-10
