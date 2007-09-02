@@ -3,7 +3,7 @@ from __future__ import division # to avoid the mess with integer divisions
 
 __all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
 
-__version__ = "$Id: polynomial.py 16 2007-09-02 16:03:21Z olivier $"
+__version__ = "$Id: polynomial.py 17 2007-09-02 17:50:03Z olivier $"
 
 
 """
@@ -133,16 +133,18 @@ class Polynomial (object):
     degree = self.degree()
     if degree == 0:
       raise self.ConstantPolynomialError("Constant polynomials have no companion matrix")
-    companion = eye(degree, degree, -1, dtype=complex)
+    companion = eye(degree, k=-1, dtype=complex)
     companion[:,-1] = -self.coeffs[:degree]/self.coeffs[degree]
     return companion
 
   def zeros(self):
     """Compute the zeros via the companion matrix"""
     try:
-      return list(numpy.linalg.eigvals(self.companion()))
+      companion = self.companion()
     except self.ConstantPolynomialError:
       return []
+    else:
+      return list(numpy.linalg.eigvals(companion))
 
   resolution = 200
   def plot(self, a, b):
