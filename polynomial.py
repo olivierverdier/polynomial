@@ -3,7 +3,7 @@ from __future__ import division # to avoid the mess with integer divisions
 
 __all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
 
-__version__ = "$Id: polynomial.py 17 2007-09-02 17:50:03Z olivier $"
+__version__ = "$Id: polynomial.py 23 2007-09-05 17:07:50Z olivier $"
 
 
 """
@@ -61,11 +61,11 @@ class Polynomial (object):
 
   def __str__(self):
     """Pretty presentation"""
-    return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:len(self)]))
+    return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:len(self)]) if coeff != 0)
 
   def __repr__(self):
     """Make it easy to create a new polynomial from of this output"""
-    return "Polynomial(%s)" % str(list(self.coeffs[:len(self)]))
+    return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:len(self)])))
 
   def __getitem__(self, index):
     """Simulate the [] access and return zero for indices out of range"""
@@ -101,6 +101,9 @@ class Polynomial (object):
   def __neg__(self):
     """-P"""
     return Polynomial(-self.coeffs)
+
+  def __pos__(self):
+    return Polynomial(self.coeffs)
 
   def __sub__(self, other):
     """P1 - P2"""
@@ -190,7 +193,7 @@ class Polynomial (object):
     """Plot the zeros in the complex plane."""
     zeros = self.zeros()
     from numpy import real, imag, diff
-    from pylab import axis
+    from pylab import axis, plot
     plot(real(zeros), imag(zeros), 'o')
 
     # now we enlarge the graph a bit
@@ -294,6 +297,7 @@ else: # here we do some tests that will not be run when importing this module
     assert (p * p) * p == p * (p * p)
     assert (p + p) + p == p + (p + p)
     assert p-p == Zero
+    assert p + (-p) == 0
     assert p+p == 2*p
     if p != Zero:
       assert 2*p != 3*p
@@ -304,6 +308,7 @@ else: # here we do some tests that will not be run when importing this module
     assert p + One == p + 1
     assert p + 0 == p
     assert p.test_zeros()
+    assert p == +p
     assert isinstance(p.zeros(), list) # a list, not an array
     assert isinstance(p(myArray), numpy.ndarray), "Evaluation should work on arrays"
   
