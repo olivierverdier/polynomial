@@ -3,7 +3,7 @@ from __future__ import division # to avoid the mess with integer divisions
 
 __all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
 
-__version__ = "$Id: polynomial.py 23 2007-09-05 17:07:50Z olivier $"
+__version__ = "$Id: polynomial.py 30 2007-09-10 13:36:49Z olivier $"
 
 
 """
@@ -61,11 +61,11 @@ class Polynomial (object):
 
   def __str__(self):
     """Pretty presentation"""
-    return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:len(self)]) if coeff != 0)
+    return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:self.length()]) if coeff != 0)
 
   def __repr__(self):
     """Make it easy to create a new polynomial from of this output"""
-    return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:len(self)])))
+    return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:self.length()])))
 
   def __getitem__(self, index):
     """Simulate the [] access and return zero for indices out of range"""
@@ -79,7 +79,7 @@ class Polynomial (object):
     """Allow to change an arbitrary coefficient (even out of range)"""
     raise NotImplementedError
 
-  def __len__(self):
+  def length(self):
     """"Length" of the polynomial (degree + 1)"""
     for index, coeff in enumerate(reversed(list(self.coeffs))):
       if coeff != 0:
@@ -88,12 +88,12 @@ class Polynomial (object):
 
   def degree(self):
     """Degree of the polynomial (biggest non zero coefficient)"""
-    return len(self) - 1
+    return self.length() - 1
 
   @cast_scalars
   def __add__(self, other):
     """P1 + P2"""
-    maxLength = max(len(self), len(other))
+    maxLength = max(self.length(), other.length())
     return Polynomial([self[index] + other[index] for index in range(maxLength)])
 
   __radd__ = __add__
@@ -116,11 +116,16 @@ class Polynomial (object):
   def __mul__(self, other):
     """P1 * P2"""
     # length of the resulting polynomial:
-    length = len(self) + len(other)
-    newCoeffs = [numpy.sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
+    length = self.length() + other.length()
+    newCoeffs = [sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
     return Polynomial(newCoeffs)
 
   __rmul__ = __mul__
+
+  def __div__(self, scalar):
+    return self * (1/scalar)
+
+  __truediv__ = __div__
 
   def __pow__(self, n):
     """P**n"""
@@ -224,10 +229,6 @@ class Polynomial (object):
     """Create a random complex polynomial"""
     return cls.random(comp=True, *args)
 
-  def test_zeros(self):
-    """Check that we are really zero on the zeros (up to epsilon)"""
-    return all(self(z) < self.epsilon for z in self.zeros())
-
 class TrigPolynomial (Polynomial):
   """Model for a trigonometric polynomial"""
 
@@ -247,10 +248,17 @@ One = Polynomial([1]) # the unit polynomial
 
 X = Polynomial([0,1])
 
-if __name__ != "__main__": # when importing:
-  # a bit of cleaning up
-  del array, numpy, pylab, division
-else: # here we do some tests that will not be run when importing this module
+#if __name__ != "__main__": # when importing:
+#  # a bit of cleaning up
+#  del array, numpy, pylab, division
+if __name__ == "__main__": # here we do some tests that will not be run when importing this module
+
+  # we add a testing method
+  def test_zeros(self):
+    """Check that we are really zero on the zeros (up to epsilon)"""
+    return all(self(z) < self.epsilon for z in self.zeros())
+  Polynomial.test_zeros = test_zeros
+
   assert not Zero
   assert not Polynomial([0,0])
   assert Zero.degree() == 0
@@ -261,8 +269,8 @@ else: # here we do some tests that will not be run when importing this module
 
   assert X.degree() == 1
   assert (X+X).degree()==1
-  assert len(One) == 1
-  assert len(X) == 2
+  assert One.length() == 1
+  assert X.length() == 2
 
   assert Polynomial((0,)) != Polynomial([0,2])
 
@@ -293,6 +301,7 @@ else: # here we do some tests that will not be run when importing this module
     assert p * 0 == Zero
     assert 0 * p == Zero
     assert 2 * p == p * 2
+    assert 2 * (p/2) == p
     assert p**2 == p * p
     assert (p * p) * p == p * (p * p)
     assert (p + p) + p == p + (p + p)
