@@ -3,7 +3,7 @@ from __future__ import division # to avoid the mess with integer divisions
 
 __all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
 
-__version__ = "$Id: polynomial.py 31 2007-10-08 17:07:02Z olivier $"
+__version__ = "$Id: polynomial.py 32 2007-11-11 15:05:27Z olivier $"
 
 
 """
@@ -194,12 +194,12 @@ class Polynomial (object):
 
 	# this one is for fun only
 	enlarge_coeff = .2
-	def plot_zeros(self):
+	def plot_zeros(self, **kwargs):
 		"""Plot the zeros in the complex plane."""
 		zeros = self.zeros()
 		from numpy import real, imag, diff
 		from pylab import axis, plot
-		plot(real(zeros), imag(zeros), 'o')
+		plot(real(zeros), imag(zeros), 'o', **kwargs)
 
 		# now we enlarge the graph a bit
 		zone = array(axis()).reshape(2,2)
