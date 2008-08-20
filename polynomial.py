@@ -175,7 +175,10 @@ class Polynomial (object):
 		try:
 			companion = self.companion()
 		except self.ConstantPolynomialError:
-			return []
+			if self: # non zero
+				return []
+			else:
+				raise self.ConstantPolynomialError("The zero polynomial has infinitely many zeroes")
 		else:
 			from numpy.linalg import eigvals
 			return eigvals(companion).tolist()
@@ -301,7 +304,10 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 		"""
 		Check that we are really zero on the zeros (up to epsilon)
 		"""
-		return all(self(z) < self.epsilon for z in self.zeros())
+		if p: # if p != 0
+			return all(self(z) < self.epsilon for z in self.zeros())
+		else:
+			return True
 	Polynomial.test_zeros = test_zeros
 
 	assert not Zero
@@ -365,7 +371,8 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 		assert p + 0 == p
 		assert p.test_zeros()
 		assert p == +p
-		assert isinstance(p.zeros(), list) # a list, not an array
+		if p:
+			assert isinstance(p.zeros(), list) # a list, not an array
 		assert isinstance(p(myArray), numpy.ndarray), "Evaluation should work on arrays"
 	
 	# tests with some specific polynomials
@@ -383,3 +390,9 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 	assert abs(tp(numpy.pi/2) - (-1+1j)) < 1e-10
 	
 	p1[10] = 1
+	try:
+		Zero.zeros()
+	except Polynomial.ConstantPolynomialError:
+		pass
+	else:
+		raise Exception
