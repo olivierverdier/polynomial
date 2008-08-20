@@ -253,7 +253,7 @@ class Polynomial (object):
 		"""
 		Create a random polynomial of degree <= N
 		Coefficients are in [-.5, .5] (+1j[-.5, .5])
-			comp – whether the polynomial may have complex coefficients
+			comp - whether the polynomial may have complex coefficients
 		"""
 		from numpy.random import randint,rand
 		def random_coeffs(size):
