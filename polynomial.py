@@ -1,25 +1,23 @@
 # -*- coding: UTF-8 -*-
 from __future__ import division # to avoid the mess with integer divisions
 
+# determine what is imported during a `from polynomial import *`
 __all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
-
-__version__ = "$Id: polynomial.py 32 2007-11-11 15:05:27Z olivier $"
-
 
 """
 Classes to model polynomial and trigonometric polynomials.
 It also defines a Zero and One polynomials
 """
 
-import numpy
-import pylab
-from numpy import array
+from numpy import array,isscalar
 
 
 def cast_scalars(method):
-	"""Decorator used to cast a scalar to a polynomial"""
+	"""
+	Decorator used to cast a scalar to a polynomial
+	"""
 	def newMethod(self, other):
-		if numpy.isscalar(other):
+		if isscalar(other):
 			other = Polynomial(other)
 		return method(self, other)
 	return newMethod
@@ -38,14 +36,7 @@ class Polynomial (object):
 		P = 3 + 4*X + X**2
 		P(3)	# value at 3
 		P[10] # 10th coefficient (zero)
-
-	Remarks:
-	1. One may use any ring for the coefficient of this polynomial class
-	2. the evaluation method works automatically on arrays
-	3. the polynomial is itself a ring, and may be used as coefficients in an array:
-		AP = numpy.array([p1,p2])
-		numpy.dot(AP, AP)
-	(An application could be to compute the characteristic polynomial of a matrix.)
+		P[10] = 1 # setting the tenth coefficient
 	"""
 	def __init__(self, coeffs):
 		"""
@@ -53,60 +44,84 @@ class Polynomial (object):
 		There may be additional trailing zeros.
 		"""
 		# we allow the creation of polynomials from scalars:
-		if numpy.isscalar(coeffs):
+		if isscalar(coeffs):
 			coeffs = [coeffs]
 		elif not list(coeffs): # empty coeff list
 			coeffs = [0]
 		self.coeffs = array(coeffs)
 
 	def __str__(self):
-		"""Pretty presentation"""
+		"""
+		Pretty presentation
+		"""
 		return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:self.length()]) if coeff != 0)
 
 	def __repr__(self):
-		"""Make it easy to create a new polynomial from of this output"""
+		"""
+		Make it easy to create a new polynomial from of this output
+		"""
 		return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:self.length()])))
 
 	def __getitem__(self, index):
-		"""Simulate the [] access and return zero for indices out of range"""
+		"""
+		Simulate the [] access and return zero for indices out of range
+		"""
 		# note: this method is used in the addition and multiplication operations
 		try:
 			return self.coeffs[index]
 		except IndexError:
-			return 0
+			return 0.
 
 	def __setitem__(self, index, value):
-		"""Allow to change an arbitrary coefficient (even out of range)"""
-		raise NotImplementedError
+		"""
+		Change an arbitrary coefficient (even out of range)
+		"""
+		try:
+			self.coeffs[index] = value
+		except IndexError:
+			from numpy import append,zeros
+			newcoeffs = append(self.coeffs, zeros(index-len(self.coeffs)+1))
+			newcoeffs[index] = value
+			self.coeffs = newcoeffs
 
 	def length(self):
-		""""Length" of the polynomial (degree + 1)"""
+		"""
+		"Length" of the polynomial (degree + 1)
+		"""
 		for index, coeff in enumerate(reversed(list(self.coeffs))):
 			if coeff != 0:
 				break
 		return len(self.coeffs)-index
 
 	def degree(self):
-		"""Degree of the polynomial (biggest non zero coefficient)"""
+		"""
+		Degree of the polynomial (biggest non zero coefficient)
+		"""
 		return self.length() - 1
 
 	@cast_scalars
 	def __add__(self, other):
-		"""P1 + P2"""
+		"""
+		P1 + P2
+		"""
 		maxLength = max(self.length(), other.length())
 		return Polynomial([self[index] + other[index] for index in range(maxLength)])
 
 	__radd__ = __add__
 
 	def __neg__(self):
-		"""-P"""
+		"""
+		-P
+		"""
 		return Polynomial(-self.coeffs)
 
 	def __pos__(self):
 		return Polynomial(self.coeffs)
 
 	def __sub__(self, other):
-		"""P1 - P2"""
+		"""
+		P1 - P2
+		"""
 		return self + (-other)
 
 	def __rsub__(self, other):
@@ -114,7 +129,9 @@ class Polynomial (object):
 
 	@cast_scalars
 	def __mul__(self, other):
-		"""P1 * P2"""
+		"""
+		P1 * P2
+		"""
 		# length of the resulting polynomial:
 		length = self.length() + other.length()
 		newCoeffs = [sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
@@ -128,15 +145,21 @@ class Polynomial (object):
 	__truediv__ = __div__
 
 	def __pow__(self, n):
-		"""P**n"""
+		"""
+		P**n
+		"""
 		def mul(a,b): return a*b
 		return reduce(mul, [self]*n, 1.)
 
 	class ConstantPolynomialError(Exception):
-		"""Exception for constant polynomials"""
+		"""
+		Exception for constant polynomials
+		"""
 
 	def companion(self):
-		"""Companion matrix"""
+		"""
+		Companion matrix
+		"""
 		from numpy import eye
 		degree = self.degree()
 		if degree == 0:
@@ -146,20 +169,27 @@ class Polynomial (object):
 		return companion
 
 	def zeros(self):
-		"""Compute the zeros via the companion matrix"""
+		"""
+		Compute the zeros via the companion matrix
+		"""
 		try:
 			companion = self.companion()
 		except self.ConstantPolynomialError:
 			return []
 		else:
-			return list(numpy.linalg.eigvals(companion))
+			from numpy.linalg import eigvals
+			return eigvals(companion).tolist()
 
 	resolution = 200
 	def plot(self, a, b):
-		"""Plot the polynomial between a and b"""
-		xx = pylab.linspace(a, b, self.resolution)
+		"""
+		Plot the polynomial between a and b
+		"""
+		from numpy import linspace
+		from pylab import plot
+		xx = linspace(a, b, self.resolution)
 		# here we use the fact that evaluation works on arrays:
-		pylab.plot(xx, self(xx))
+		plot(xx, self(xx))
 
 	def __call__(self, x):
 		"""
@@ -167,47 +197,57 @@ class Polynomial (object):
 			x may be a scalar or an array
 		"""
 		# note: the following technique certainly obfuscates the code...
-		# just take it as an example of dynamic functions (called "closures")
-
 		# Notice how the following "sub-function" depends on x:
-		def simpleMult(a, b):
-			return a*x + b
+		def simpleMult(a, b): return a*x + b
 		# the third argument is to take care of constant polynomials!
 		return reduce(simpleMult, reversed(self.coeffs), 0)
 
 	epsilon = 1e-10
 	def __nonzero__(self):
-		"""Test for difference from zero (up to epsilon)"""
+		"""
+		Test for difference from zero (up to epsilon)
+		"""
+		# notice the use of a generator inside the parenthesis
+		# the any function will return True for the first True element encountered in the generator
 		return any(abs(coeff) > self.epsilon for coeff in self.coeffs)
 
 	def __eq__(self, other):
-		"""P1 == P2"""
+		"""
+		P1 == P2
+		"""
 		return not (self - other)
 
 	def __ne__(self, other):
-		"""P1 != P2"""
+		"""
+		P1 != P2
+		"""
 		return not (self == other)
 
 	def differentiate(self):
-		"""Symbolic differentiation"""
+		"""
+		Symbolic differentiation
+		"""
 		return Polynomial((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
 
 	# this one is for fun only
 	enlarge_coeff = .2
 	def plot_zeros(self, **kwargs):
-		"""Plot the zeros in the complex plane."""
+		# note the **kwargs which are passed on to the plot function
+		"""
+		Plot the zeros in the complex plane.
+		"""
 		zeros = self.zeros()
-		from numpy import real, imag, diff
+		from numpy import real, imag, diff, hstack
 		from pylab import axis, plot
-		plot(real(zeros), imag(zeros), 'o', **kwargs)
+		plot(real(zeros), imag(zeros), '+', markersize=10, **kwargs)
 
 		# now we enlarge the graph a bit
 		zone = array(axis()).reshape(2,2)
 		padding = self.enlarge_coeff * diff(zone)
-		zone += numpy.hstack((-padding, padding))
+		zone += hstack((-padding, padding))
 		axis(zone.reshape(-1))		
 
-	# this is for playing around
+	# this is for testing purposes
 	@classmethod
 	def random(cls, N=10, comp=False):
 		"""
@@ -215,9 +255,10 @@ class Polynomial (object):
 		Coefficients are in [-.5, .5] (+1j[-.5, .5])
 			comp – whether the polynomial may have complex coefficients
 		"""
+		from numpy.random import randint,rand
 		def random_coeffs(size):
-			return numpy.random.rand(size) - .5
-		coeffs = random_coeffs(numpy.random.randint(N))
+			return rand(size) - .5
+		coeffs = random_coeffs(randint(N))
 		if comp:
 			coeffs = coeffs + 1j*random_coeffs(len(coeffs))
 		return cls(coeffs)
@@ -226,11 +267,15 @@ class Polynomial (object):
 
 	@classmethod
 	def random_complex(cls, *args):
-		"""Create a random complex polynomial"""
+		"""
+		Create a random complex polynomial
+		"""
 		return cls.random(comp=True, *args)
 
 class TrigPolynomial (Polynomial):
-	"""Model for a trigonometric polynomial"""
+	"""
+		Model for a trigonometric polynomial
+		"""
 
 	def __call__(self, theta):
 		from numpy import exp
@@ -248,14 +293,14 @@ One = Polynomial([1]) # the unit polynomial
 
 X = Polynomial([0,1])
 
-#if __name__ != "__main__": # when importing:
-#	 # a bit of cleaning up
-#	 del array, numpy, pylab, division
-if __name__ == "__main__": # here we do some tests that will not be run when importing this module
 
+if __name__ == "__main__": # here we do some tests that will not be run when importing this module
+	import numpy
 	# we add a testing method
 	def test_zeros(self):
-		"""Check that we are really zero on the zeros (up to epsilon)"""
+		"""
+		Check that we are really zero on the zeros (up to epsilon)
+		"""
 		return all(self(z) < self.epsilon for z in self.zeros())
 	Polynomial.test_zeros = test_zeros
 
@@ -336,3 +381,5 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 	assert p1*p2 == Polynomial([6., 4., 9., 6.])
 	tp = TrigPolynomial([-1,1])
 	assert abs(tp(numpy.pi/2) - (-1+1j)) < 1e-10
+	
+	p1[10] = 1
