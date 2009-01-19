@@ -25,11 +25,19 @@ def cast_scalars(method):
 class Polynomial (object):
 	"""
 	Model class for a polynomial.
-	The usual operations (+, -, *, **) are provided
-	Comparison between polynomials is defined
-	Scalars are automatically cast to polynomials
-	Trailing zeros are allowed in the coefficients
-	Examples of the variations on the syntax:
+	
+	Features
+	========
+	
+	* The usual operations (``+``, ``-``, ``*``, ``**``) are provided
+	* Comparison between polynomials is defined
+	* Scalars are automatically cast to polynomials
+	* Trailing zeros are allowed in the coefficients
+	
+	Examples
+	========
+	::
+	
 		Polynomial(3)
 		Polynomial([3,4,1])
 		Polynomial([3,4,1,0,0])
@@ -52,19 +60,19 @@ class Polynomial (object):
 
 	def __str__(self):
 		"""
-		Pretty presentation
+		Pretty presentation.
 		"""
 		return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:self.length()]) if coeff != 0)
 
 	def __repr__(self):
 		"""
-		Make it easy to create a new polynomial from of this output
+		Make it easy to create a new polynomial from of this output.
 		"""
 		return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:self.length()])))
 
 	def __getitem__(self, index):
 		"""
-		Simulate the [] access and return zero for indices out of range
+		Simulate the [] access and return zero for indices out of range.
 		"""
 		# note: this method is used in the addition and multiplication operations
 		try:
@@ -95,7 +103,7 @@ class Polynomial (object):
 
 	def degree(self):
 		"""
-		Degree of the polynomial (biggest non zero coefficient)
+		Degree of the polynomial (biggest non zero coefficient).
 		"""
 		return self.length() - 1
 
@@ -158,7 +166,7 @@ class Polynomial (object):
 
 	def companion(self):
 		"""
-		Companion matrix
+		Companion matrix.
 		"""
 		from numpy import eye
 		degree = self.degree()
@@ -170,7 +178,7 @@ class Polynomial (object):
 
 	def zeros(self):
 		"""
-		Compute the zeros via the companion matrix
+		Compute the zeros via the companion matrix.
 		"""
 		try:
 			companion = self.companion()
@@ -183,10 +191,11 @@ class Polynomial (object):
 			from numpy.linalg import eigvals
 			return eigvals(companion).tolist()
 
+	# this is a default class parameter
 	resolution = 200
 	def plot(self, a, b):
 		"""
-		Plot the polynomial between a and b
+		Plot the polynomial between a and b.
 		"""
 		from numpy import linspace
 		from pylab import plot
@@ -200,6 +209,7 @@ class Polynomial (object):
 			x may be a scalar or an array
 		"""
 		# note: the following technique certainly obfuscates the code...
+		#
 		# Notice how the following "sub-function" depends on x:
 		def simpleMult(a, b): return a*x + b
 		# the third argument is to take care of constant polynomials!
@@ -275,15 +285,18 @@ class Polynomial (object):
 		"""
 		return cls.random(comp=True, *args)
 
+# note: The following class is a (bad) exampmle of inheritance.
+# it is only here for illustration purpose
 class TrigPolynomial (Polynomial):
 	"""
-		Model for a trigonometric polynomial
-		"""
+	Model for a trigonometric polynomial.
+	"""
 
 	def __call__(self, theta):
 		from numpy import exp
 		return Polynomial.eval(self, exp(1j*theta))
 
+# just for a cleaner import we delete this decorator
 del cast_scalars
 
 for cls in (Polynomial, TrigPolynomial):
@@ -296,20 +309,14 @@ One = Polynomial([1]) # the unit polynomial
 
 X = Polynomial([0,1])
 
+# now come the tests
+# should always be put *in a different file*!
 
-if __name__ == "__main__": # here we do some tests that will not be run when importing this module
-	import numpy
-	# we add a testing method
-	def test_zeros(self):
-		"""
-		Check that we are really zero on the zeros (up to epsilon)
-		"""
-		if p: # if p != 0
-			return all(self(z) < self.epsilon for z in self.zeros())
-		else:
-			return True
-	Polynomial.test_zeros = test_zeros
+import numpy
 
+from nose.tools import raises
+
+def test_Zero_One_X():
 	assert not Zero
 	assert not Polynomial([0,0])
 	assert Zero.degree() == 0
@@ -323,8 +330,6 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 	assert One.length() == 1
 	assert X.length() == 2
 
-	assert Polynomial((0,)) != Polynomial([0,2])
-
 	r = numpy.random.random()
 	assert Zero(r) == 0
 	assert One(r) == 1
@@ -332,67 +337,142 @@ if __name__ == "__main__": # here we do some tests that will not be run when imp
 
 	assert Zero == 0
 	assert One == 1
+
+	assert not Zero
+	assert One
+
 	assert not 2*Zero != 3*Zero
 
 	assert X.differentiate() == 1
 	assert (X**2).differentiate() == 2*X
 	assert (X-1)*(X+1) == X**2 - 1
-	
-	myLength = 10
-	myArray = numpy.random.rand(myLength)
 
-	for p in (Zero, One, X, Polynomial.random_real(), Polynomial.random_complex()):
+	assert Polynomial((0,)) != Polynomial([0,2])
+
+
+
+
+class Harness(object):
+	
+	def test_zero_one(self):
+		p = self.p
 		assert p * One == p
 		assert p * Zero == Zero
 		assert p + Zero == p
+		
+	
+	def test_power(self):
+		p = self.p
+		assert p**0 == 1
+		assert p**1 == p
+		assert p**2 == p*p
+		
+	def test_equality(self):
+		p = self.p
 		assert p == p
-		# scalar muliplications:
+		assert p + 1 != p
+	
+	def test_scalar_mul(self):
+		"""scalar muliplications"""
+		p = self.p
 		assert 1 * p == p
 		assert p * 1 == p
 		assert p * 0 == Zero
 		assert 0 * p == Zero
 		assert 2 * p == p * 2
 		assert 2 * (p/2) == p
-		assert p**2 == p * p
+		assert (2*p == 3*p) == (p == Zero) # 2p == 3p <==> p == 0
+		assert (2*p != 3*p) == (p != Zero) # 2p != 3p <==> p != 0
+	
+	def test_operations(self):
+		p = self.p
 		assert (p * p) * p == p * (p * p)
 		assert (p + p) + p == p + (p + p)
 		assert p-p == Zero
+	
+	def test_unitary(self):
+		"""unitary operations"""
+		p = self.p
 		assert p + (-p) == 0
+		assert p == +p
+		assert p == -(-p)
+	
+	def test_scalar_add(self):
+		p = self.p
 		assert p+p == 2*p
-		assert p**0 == 1
-		assert p**1 == p
-		if p != Zero:
-			assert 2*p != 3*p
-			assert p
-		else:
-			assert 2*p == 3*p
-			assert not p
 		assert p + One == p + 1
 		assert p + 0 == p
-		assert p.test_zeros()
-		assert p == +p
-		if p:
-			assert isinstance(p.zeros(), list) # a list, not an array
-		assert isinstance(p(myArray), numpy.ndarray), "Evaluation should work on arrays"
+		assert (p+2) -2 == p
+		
 	
-	# tests with some specific polynomials
-	p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
-	p2 = Polynomial([3.,2.]) #3 + 2x
+	def test_array_evaluation(self):
+		"Evaluation should work on arrays"
+		self.myLength = 10
+		self.myArray = numpy.random.rand(self.myLength)
+		assert isinstance(self.p(self.myArray), numpy.ndarray)
 
-	assert p1.degree() == 2
-	assert p1[4] == 0, "Index out of range should return zero"
-	assert p1[0] == 2
-	assert p1+p2 == Polynomial([5,2,3])
-	assert p1.differentiate() == Polynomial([0,6])
-	assert p1(2) == 14
-	assert p1*p2 == Polynomial([6., 4., 9., 6.])
+	def test_zeros(self):
+		def test_zeros(self):
+			"""
+			Check that we are really zero on the zeros (up to epsilon)
+			"""
+			if self: # if p != 0
+				return all(self(z) < self.epsilon for z in self.zeros())
+			else:
+				return True
+		assert test_zeros(self.p)
+
+	def test_zeros_is_list(self):
+		if self.p:
+			assert isinstance(self.p.zeros(), list) # a list, not an array
+
+class Test_Zero(Harness):
+	def setUp(self):
+		self.p = Zero
+
+class Test_One(Harness):
+	def setUp(self):
+		self.p = One
+
+class Test_X(Harness):
+	def setUp(self):
+		self.p = X
+
+class Test_Random(Harness):
+	def setUp(self):
+		self.p = Polynomial.random_real()
+
+class Test_RandomComplex(Harness):
+	def setUp(self):
+		self.p = Polynomial.random_complex()
+
+@raises(Polynomial.ConstantPolynomialError)
+def test_Zero_zeros():
+	"""Asking for zeros of Zero raises an exception"""
+	Zero.zeros()
+
+class Test_Simple(object):
+	"""tests with some specific polynomials"""
+	def setUp(self):	
+		self.p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
+		self.p2 = Polynomial([3.,2.]) #3 + 2x
+
+	def test_operations(self):
+		p1 = self.p1
+		p2 = self.p2
+		assert p1.degree() == 2
+		assert p1[4] == 0, "Index out of range should return zero"
+		assert p1[0] == 2
+		assert p1+p2 == Polynomial([5,2,3])
+		assert p1.differentiate() == Polynomial([0,6])
+		assert p1(2) == 14
+		assert p1*p2 == Polynomial([6., 4., 9., 6.])
+
+
+def test_trigpolynomial():
+	raise Exception
 	tp = TrigPolynomial([-1,1])
 	assert abs(tp(numpy.pi/2) - (-1+1j)) < 1e-10
+test_trigpolynomial.__test__ = False # don't test this...
 	
-	p1[10] = 1
-	try:
-		Zero.zeros()
-	except Polynomial.ConstantPolynomialError:
-		pass
-	else:
-		raise Exception
+	
