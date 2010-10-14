@@ -260,30 +260,6 @@ class Polynomial (object):
 		zone += hstack((-padding, padding))
 		axis(zone.reshape(-1))		
 
-	# this is for testing purposes
-	@classmethod
-	def random(cls, N=10, comp=False):
-		"""
-		Create a random polynomial of degree <= N
-		Coefficients are in [-.5, .5] (+1j[-.5, .5])
-			comp - whether the polynomial may have complex coefficients
-		"""
-		from numpy.random import randint,rand
-		def random_coeffs(size):
-			return rand(size) - .5
-		coeffs = random_coeffs(randint(N))
-		if comp:
-			coeffs = coeffs + 1j*random_coeffs(len(coeffs))
-		return cls(coeffs)
-
-	random_real = random
-
-	@classmethod
-	def random_complex(cls, *args):
-		"""
-		Create a random complex polynomial
-		"""
-		return cls.random(comp=True, *args)
 
 # note: The following class is a (bad) exampmle of inheritance.
 # it is only here for illustration purpose
@@ -311,6 +287,25 @@ X = Polynomial([0,1])
 
 # now come the tests
 # should always be put *in a different file*!
+
+# class method for testing
+@classmethod
+def random(cls, N=10, real=False):
+	"""
+	Create a random polynomial of (random) degree <= N
+	Coefficients are in [-.5, .5] (+1j[-.5, .5])
+		real – whether the polynomial should have only real coefficients
+	"""
+	def random_coeffs(size):
+		return numpy.random.random([size]) - .5
+	degree = numpy.random.randint(N)
+	coeffs = random_coeffs(degree) + 1j*random_coeffs(degree)
+	if real:
+		coeffs = coeffs.real
+	return cls(coeffs)
+
+# add this class method dynamically
+Polynomial.random = random
 
 import numpy
 
@@ -440,11 +435,11 @@ class Test_X(Harness):
 
 class Test_Random(Harness):
 	def setUp(self):
-		self.p = Polynomial.random_real()
+		self.p = Polynomial.random(real=True)
 
 class Test_RandomComplex(Harness):
 	def setUp(self):
-		self.p = Polynomial.random_complex()
+		self.p = Polynomial.random()
 
 @raises(Polynomial.ConstantPolynomialError)
 def test_Zero_zeros():
