@@ -446,22 +446,17 @@ def test_Zero_zeros():
 	"""Asking for zeros of Zero raises an exception"""
 	Zero.zeros()
 
-class Test_Simple(object):
+def test_simple_operations():
 	"""tests with some specific polynomials"""
-	def setUp(self):	
-		self.p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
-		self.p2 = Polynomial([3.,2.]) #3 + 2x
-
-	def test_operations(self):
-		p1 = self.p1
-		p2 = self.p2
-		assert p1.degree() == 2
-		assert p1[4] == 0, "Index out of range should return zero"
-		assert p1[0] == 2
-		assert p1+p2 == Polynomial([5,2,3])
-		assert p1.differentiate() == Polynomial([0,6])
-		assert p1(2) == 14
-		assert p1*p2 == Polynomial([6., 4., 9., 6.])
+	p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
+	p2 = Polynomial([3.,2.]) #3 + 2x
+	assert p1.degree() == 2
+	assert p1[4] == 0, "Index out of range should return zero"
+	assert p1[0] == 2
+	assert p1+p2 == Polynomial([5,2,3])
+	assert p1.differentiate() == Polynomial([0,6])
+	assert p1(2) == 14
+	assert p1*p2 == Polynomial([6., 4., 9., 6.])
 
 
 def test_trigpolynomial():
