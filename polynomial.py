@@ -9,7 +9,8 @@ Classes to model polynomial and trigonometric polynomials.
 It also defines a Zero and One polynomials
 """
 
-from numpy import array,isscalar
+from numpy import array
+import numpy
 
 
 def cast_scalars(method):
@@ -17,7 +18,7 @@ def cast_scalars(method):
 	Decorator used to cast a scalar to a polynomial
 	"""
 	def newMethod(self, other):
-		if isscalar(other):
+		if numpy.isscalar(other):
 			other = Polynomial(other)
 		return method(self, other)
 	return newMethod
@@ -52,7 +53,7 @@ class Polynomial (object):
 		There may be additional trailing zeros.
 		"""
 		# we allow the creation of polynomials from scalars:
-		if isscalar(coeffs):
+		if numpy.isscalar(coeffs):
 			coeffs = [coeffs]
 		elif not list(coeffs): # empty coeff list
 			coeffs = [0]
