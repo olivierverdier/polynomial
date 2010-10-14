@@ -322,8 +322,8 @@ def test_Zero_One_X():
 
 	assert X.degree() == 1
 	assert (X+X).degree()==1
-	assert One.length() == 1
-	assert X.length() == 2
+	assert One.degree() == 0
+	assert X.degree() == 1
 
 	r = numpy.random.random()
 	assert Zero(r) == 0
