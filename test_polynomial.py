@@ -67,25 +67,25 @@ def test_Zero_One_X():
 
 
 class Harness(object):
-	
+
 	def test_zero_one(self):
 		p = self.p
 		assert p * One == p
 		assert p * Zero == Zero
 		assert p + Zero == p
-		
-	
+
+
 	def test_power(self):
 		p = self.p
 		assert p**0 == 1
 		assert p**1 == p
 		assert p**2 == p*p
-		
+
 	def test_equality(self):
 		p = self.p
 		assert p == p
 		assert p + 1 != p
-	
+
 	def test_scalar_mul(self):
 		"""scalar muliplications"""
 		p = self.p
@@ -97,28 +97,28 @@ class Harness(object):
 		assert 2 * (p/2) == p
 		assert (2*p == 3*p) == (p == Zero) # 2p == 3p <==> p == 0
 		assert (2*p != 3*p) == (p != Zero) # 2p != 3p <==> p != 0
-	
+
 	def test_operations(self):
 		p = self.p
 		assert (p * p) * p == p * (p * p)
 		assert (p + p) + p == p + (p + p)
 		assert p-p == Zero
-	
+
 	def test_unitary(self):
 		"""unitary operations"""
 		p = self.p
 		assert p + (-p) == 0
 		assert p == +p
 		assert p == -(-p)
-	
+
 	def test_scalar_add(self):
 		p = self.p
 		assert p+p == 2*p
 		assert p + One == p + 1
 		assert p + 0 == p
 		assert (p+2) -2 == p
-		
-	
+
+
 	def test_array_evaluation(self):
 		"Evaluation should work on arrays"
 		self.myLength = 10
@@ -183,5 +183,5 @@ def test_trigpolynomial():
 	tp = TrigPolynomial([-1,1])
 	assert abs(tp(numpy.pi/2) - (-1+1j)) < 1e-10
 test_trigpolynomial.__test__ = False # don't test this...
-	
-	
+
+

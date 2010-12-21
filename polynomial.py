@@ -26,19 +26,19 @@ def cast_scalars(method):
 class Polynomial (object):
 	"""
 	Model class for a polynomial.
-	
+
 	Features
 	========
-	
+
 	* The usual operations (``+``, ``-``, ``*``, ``**``) are provided
 	* Comparison between polynomials is defined
 	* Scalars are automatically cast to polynomials
 	* Trailing zeros are allowed in the coefficients
-	
+
 	Examples
 	========
 	::
-	
+
 		Polynomial(3)
 		Polynomial([3,4,1])
 		Polynomial([3,4,1,0,0])
@@ -259,7 +259,7 @@ class Polynomial (object):
 		zone = array(axis()).reshape(2,2)
 		padding = self.enlarge_coeff * diff(zone)
 		zone += hstack((-padding, padding))
-		axis(zone.reshape(-1))		
+		axis(zone.reshape(-1))
 
 
 # note: The following class is a (bad) exampmle of inheritance.
