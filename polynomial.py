@@ -262,7 +262,7 @@ class Polynomial (object):
 		axis(zone.reshape(-1))
 
 
-# note: The following class is a (bad) exampmle of inheritance.
+# note: The following class is a (bad) example of inheritance.
 # it is only here for illustration purpose
 class TrigPolynomial (Polynomial):
 	"""
