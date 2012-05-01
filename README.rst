@@ -17,4 +17,9 @@ Usage
 
     p.zeros() # list of zeros
 
+Testing
+*******
 
+Run::
+
+    python test_polynomial.py
