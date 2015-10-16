@@ -11,6 +11,7 @@ It also defines a Zero and One polynomials
 
 from numpy import array
 import numpy
+import functools
 
 
 def cast_scalars(method):
@@ -158,7 +159,7 @@ class Polynomial (object):
 		P**n
 		"""
 		def mul(a,b): return a*b
-		return reduce(mul, [self]*n, 1.)
+		return functools.reduce(mul, [self]*n, 1.)
 
 	class ConstantPolynomialError(Exception):
 		"""
@@ -214,16 +215,18 @@ class Polynomial (object):
 		# Notice how the following "sub-function" depends on x:
 		def simpleMult(a, b): return a*x + b
 		# the third argument is to take care of constant polynomials!
-		return reduce(simpleMult, reversed(self.coeffs), 0)
+		return functools.reduce(simpleMult, reversed(self.coeffs), 0)
 
 	epsilon = 1e-10
-	def __nonzero__(self):
+	def __bool__(self):
 		"""
 		Test for difference from zero (up to epsilon)
 		"""
 		# notice the use of a generator inside the parenthesis
 		# the any function will return True for the first True element encountered in the generator
 		return any(abs(coeff) > self.epsilon for coeff in self.coeffs)
+
+	__nonzero__ = __bool__ # compatibility Python 2
 
 	def __eq__(self, other):
 		"""
