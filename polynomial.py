@@ -193,18 +193,6 @@ class Polynomial (object):
 			from numpy.linalg import eigvals
 			return eigvals(companion).tolist()
 
-	# this is a default class parameter
-	resolution = 200
-	def plot(self, a, b):
-		"""
-		Plot the polynomial between a and b.
-		"""
-		from numpy import linspace
-		from pylab import plot
-		xx = linspace(a, b, self.resolution)
-		# here we use the fact that evaluation works on arrays:
-		plot(xx, self(xx))
-
 	def __call__(self, x):
 		"""
 		Numerical value of the polynomial at x
@@ -245,25 +233,6 @@ class Polynomial (object):
 		Symbolic differentiation
 		"""
 		return Polynomial((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
-
-	# this one is for fun only
-	enlarge_coeff = .2
-	def plot_zeros(self, **kwargs):
-		# note the **kwargs which are passed on to the plot function
-		"""
-		Plot the zeros in the complex plane.
-		"""
-		zeros = self.zeros()
-		from numpy import real, imag, diff, hstack
-		from pylab import axis, plot
-		plot(real(zeros), imag(zeros), '+', markersize=10, **kwargs)
-
-		# now we enlarge the graph a bit
-		zone = array(axis()).reshape(2,2)
-		padding = self.enlarge_coeff * diff(zone)
-		zone += hstack((-padding, padding))
-		axis(zone.reshape(-1))
-
 
 # note: The following class is a (bad) example of inheritance.
 # it is only here for illustration purpose
