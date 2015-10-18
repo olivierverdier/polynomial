@@ -60,11 +60,18 @@ class Polynomial (object):
 			coeffs = [0]
 		self.coeffs = array(coeffs)
 
+	def str_power(self, d, X='X'):
+		if d == 0:
+			return ''
+		if d == 1:
+			return X
+		return X+'^{}'.format(d)
+
 	def __str__(self):
 		"""
 		Pretty presentation.
 		"""
-		return ' + '.join("%sX^%d" % (str(coeff), index) for (index, coeff) in enumerate(self.coeffs[:self.length()]) if coeff != 0)
+		return ' + '.join(str(coeff)+self.str_power(index) for (index, coeff) in enumerate(self.coeffs[:self.length()]) if coeff != 0)
 
 	def __repr__(self):
 		"""

@@ -163,7 +163,9 @@ class Test_Simple(unittest.TestCase):
 	def test_simple_operations(self):
 		"""tests with some specific polynomials"""
 		p1 = Polynomial([2.,0,3.,0]) # 2 + 3x^2
+		self.assertEqual(repr(p1), 'Polynomial([2.0, 0.0, 3.0])')
 		p2 = Polynomial([3.,2.]) #3 + 2x
+		self.assertEqual(str(p2), '3.0 + 2.0X')
 		self.assertEqual(p1.degree(), 2)
 		self.assertEqual(p1[4], 0, "Index out of range should return zero")
 		self.assertEqual(p1[0], 2)
