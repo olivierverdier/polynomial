@@ -137,6 +137,12 @@ class Test_One(unittest.TestCase):
 	def test_zeros_is_list(self):
 		if self.p:
 			self.assertIsInstance(self.p.zeros(), list) # a list, not an array
+	
+	def test_set_coeff(self):
+		N = 10
+		p = Polynomial(self.p.coeffs)
+		p[N] = 20.
+		self.assertGreaterEqual(p.length(), N)
 
 class Test_Zero(Test_One):
 	def setUp(self):
