@@ -248,10 +248,6 @@ class TrigPolynomial (Polynomial):
 # just for a cleaner import we delete this decorator
 del cast_scalars
 
-for cls in (Polynomial, TrigPolynomial):
-	cls.eval = cls.__call__ # aliases eval = __call__
-del cls
-
 Zero = Polynomial([]) # the zero polynomial (extreme case with an empty coeff list)
 
 One = Polynomial([1]) # the unit polynomial
