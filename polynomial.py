@@ -234,16 +234,6 @@ class Polynomial (object):
 		"""
 		return Polynomial((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
 
-# note: The following class is a (bad) example of inheritance.
-# it is only here for illustration purpose
-class TrigPolynomial (Polynomial):
-	"""
-	Model for a trigonometric polynomial.
-	"""
-
-	def __call__(self, theta):
-		from numpy import exp
-		return Polynomial.eval(self, exp(1j*theta))
 
 # just for a cleaner import we delete this decorator
 del cast_scalars

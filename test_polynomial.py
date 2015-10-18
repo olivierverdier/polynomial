@@ -173,11 +173,5 @@ class Test_Simple(unittest.TestCase):
 		self.assertEqual(p1*p2, Polynomial([6., 4., 9., 6.]))
 
 
-	@unittest.expectedFailure
-	def test_trigpolynomial():
-		raise Exception
-		tp = TrigPolynomial([-1,1])
-		self.assertLess(abs(tp(np.pi/2) - (-1+1j)), 1e-10)
-
 if __name__ == '__main__':
 	unittest.main()
