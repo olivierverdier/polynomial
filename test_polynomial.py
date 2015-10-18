@@ -122,6 +122,7 @@ class Test_One(unittest.TestCase):
 		self.assertEqual(p + One, p + 1)
 		self.assertEqual(p + 0, p)
 		self.assertEqual((p+2) -2, p)
+		self.assertEqual((2-p)+p, 2)
 
 
 	def test_array_evaluation(self):
