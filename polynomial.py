@@ -2,7 +2,7 @@
 from __future__ import division # to avoid the mess with integer divisions
 
 # determine what is imported during a `from polynomial import *`
-__all__ = ['Polynomial', 'TrigPolynomial', 'Zero', 'One', 'X']
+__all__ = ['Polynomial', 'Zero', 'One', 'X']
 
 """
 Classes to model polynomial and trigonometric polynomials.
