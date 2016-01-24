@@ -1,4 +1,4 @@
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 from __future__ import division # to avoid the mess with integer divisions
 
 # determine what is imported during a `from polynomial import *`
