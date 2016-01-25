@@ -9,8 +9,8 @@ Classes to model polynomials.
 It also defines a Zero and One polynomials
 """
 
-from numpy import array
-import numpy
+import numpy as np
+import numpy.linalg as nl
 import functools
 
 
@@ -19,7 +19,7 @@ def cast_scalars(method):
 	Decorator used to cast a scalar to a polynomial
 	"""
 	def newMethod(self, other):
-		if numpy.isscalar(other):
+		if np.isscalar(other):
 			other = Polynomial(other)
 		return method(self, other)
 	return newMethod
@@ -54,11 +54,11 @@ class Polynomial (object):
 		There may be additional trailing zeros.
 		"""
 		# we allow the creation of polynomials from scalars:
-		if numpy.isscalar(coeffs):
+		if np.isscalar(coeffs):
 			coeffs = [coeffs]
 		elif not list(coeffs): # empty coeff list
 			coeffs = [0]
-		self.coeffs = array(coeffs)
+		self.coeffs = np.array(coeffs)
 
 	def str_power(self, d, X='X'):
 		if d == 0:
@@ -96,8 +96,7 @@ class Polynomial (object):
 		try:
 			self.coeffs[index] = value
 		except IndexError:
-			from numpy import append,zeros
-			newcoeffs = append(self.coeffs, zeros(index-len(self.coeffs)+1))
+			newcoeffs = np.append(self.coeffs, np.zeros(index-len(self.coeffs)+1))
 			newcoeffs[index] = value
 			self.coeffs = newcoeffs
 
@@ -177,11 +176,10 @@ class Polynomial (object):
 		"""
 		Companion matrix.
 		"""
-		from numpy import eye
 		degree = self.degree()
 		if degree == 0:
 			raise self.ConstantPolynomialError("Constant polynomials have no companion matrix")
-		companion = eye(degree, k=-1, dtype=complex)
+		companion = np.eye(degree, k=-1, dtype=complex)
 		companion[:,-1] = -self.coeffs[:degree]/self.coeffs[degree]
 		return companion
 
@@ -197,8 +195,7 @@ class Polynomial (object):
 			else:
 				raise self.ConstantPolynomialError("The zero polynomial has infinitely many zeroes")
 		else:
-			from numpy.linalg import eigvals
-			return eigvals(companion).tolist()
+			return nl.eigvals(companion).tolist()
 
 	def __call__(self, x):
 		"""
@@ -239,7 +236,7 @@ class Polynomial (object):
 		"""
 		Symbolic differentiation
 		"""
-		return Polynomial((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
+		return Polynomial((np.arange(len(self.coeffs))*self.coeffs)[1:])
 
 
 # just for a cleaner import we delete this decorator
