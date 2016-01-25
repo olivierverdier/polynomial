@@ -5,7 +5,7 @@ from __future__ import division # to avoid the mess with integer divisions
 __all__ = ['Polynomial', 'Zero', 'One', 'X']
 
 """
-Classes to model polynomial and trigonometric polynomials.
+Classes to model polynomials.
 It also defines a Zero and One polynomials
 """
 
