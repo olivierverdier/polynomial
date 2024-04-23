@@ -1,6 +1,3 @@
-# -*- coding: utf-8 -*-
-from __future__ import division # to avoid the mess with integer divisions
-
 # determine what is imported during a `from polynomial import *`
 __all__ = ['Polynomial', 'Zero', 'One', 'X']
 
@@ -24,7 +21,7 @@ def cast_scalars(method):
 		return method(self, other)
 	return newMethod
 
-class Polynomial (object):
+class Polynomial:
 	"""
 	Model class for a polynomial.
 
@@ -121,7 +118,7 @@ class Polynomial (object):
 		P1 + P2
 		"""
 		maxLength = max(self.length(), other.length())
-		return Polynomial([self[index] + other[index] for index in range(maxLength)])
+		return type(self)([self[index] + other[index] for index in range(maxLength)])
 
 	__radd__ = __add__
 
@@ -129,10 +126,10 @@ class Polynomial (object):
 		"""
 		-P
 		"""
-		return Polynomial(-self.coeffs)
+		return type(self)(-self.coeffs)
 
 	def __pos__(self):
-		return Polynomial(self.coeffs)
+		return type(self)(self.coeffs)
 
 	def __sub__(self, other):
 		"""
@@ -151,7 +148,7 @@ class Polynomial (object):
 		# length of the resulting polynomial:
 		length = self.length() + other.length()
 		newCoeffs = [sum(self[j]*other[i-j] for j in range(i+1)) for i in range(length)]
-		return Polynomial(newCoeffs)
+		return type(self)(newCoeffs)
 
 	__rmul__ = __mul__
 
@@ -236,8 +233,37 @@ class Polynomial (object):
 		"""
 		Symbolic differentiation
 		"""
-		return Polynomial((np.arange(len(self.coeffs))*self.coeffs)[1:])
+		return type(self)((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
 
+	# this one is for fun only
+	enlarge_coeff = .2
+	def plot_zeros(self, **kwargs):
+		# note the **kwargs which are passed on to the plot function
+		"""
+		Plot the zeros in the complex plane.
+		"""
+		zeros = self.zeros()
+		from numpy import real, imag, diff, hstack
+		from pylab import axis, plot
+		plot(real(zeros), imag(zeros), '+', markersize=10, **kwargs)
+
+		# now we enlarge the graph a bit
+		zone = array(axis()).reshape(2,2)
+		padding = self.enlarge_coeff * diff(zone)
+		zone += hstack((-padding, padding))
+		axis(zone.reshape(-1))
+
+
+# note: The following class is a (bad) example of inheritance.
+# it is only here for illustration purpose
+class TrigPolynomial (Polynomial):
+	"""
+	Model for a trigonometric polynomial.
+	"""
+
+	def __call__(self, theta):
+		from numpy import exp
+		return type(self).eval(self, exp(1j*theta))
 
 # just for a cleaner import we delete this decorator
 del cast_scalars
