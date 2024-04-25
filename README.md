@@ -22,5 +22,5 @@ Check out the [associated notebook](https://gist.github.com/olivierverdier/d939d
 Run:
 
 ```bash
-python test_polynomial.py
+pytest test_polynomial.py
 ```
