@@ -7,19 +7,20 @@ It also defines a Zero and One polynomials
 """
 
 import numpy as np
-import numpy.linalg as nl
 import functools
+
+import matplotlib.pyplot as plt
 
 
 def cast_scalars(method):
 	"""
 	Decorator used to cast a scalar to a polynomial
 	"""
-	def newMethod(self, other):
+	def new_method(self, other):
 		if np.isscalar(other):
 			other = Polynomial(other)
 		return method(self, other)
-	return newMethod
+	return new_method
 
 class Polynomial:
 	"""
@@ -74,7 +75,7 @@ class Polynomial:
 		"""
 		Make it easy to create a new polynomial from of this output.
 		"""
-		return "%s(%s)" % (type(self).__name__, str(list(self.coeffs[:self.length()])))
+		return "{}({})".format(type(self).__name__, str(list(self.coeffs[:self.length()])))
 
 	def __getitem__(self, index):
 		"""
@@ -192,7 +193,17 @@ class Polynomial:
 			else:
 				raise self.ConstantPolynomialError("The zero polynomial has infinitely many zeroes")
 		else:
-			return nl.eigvals(companion).tolist()
+			return np.linalg.eigvals(companion).tolist()
+
+	# this is a default class parameter
+	resolution = 200
+	def plot(self, a, b):
+		"""
+		Plot the polynomial between a and b.
+		"""
+		xx = np.linspace(a, b, self.resolution)
+		# here we use the fact that evaluation works on arrays:
+		plt.plot(xx, self(xx))
 
 	def __call__(self, x):
 		"""
@@ -233,7 +244,7 @@ class Polynomial:
 		"""
 		Symbolic differentiation
 		"""
-		return type(self)((numpy.arange(len(self.coeffs))*self.coeffs)[1:])
+		return type(self)((np.arange(len(self.coeffs))*self.coeffs)[1:])
 
 	# this one is for fun only
 	enlarge_coeff = .2
@@ -243,15 +254,13 @@ class Polynomial:
 		Plot the zeros in the complex plane.
 		"""
 		zeros = self.zeros()
-		from numpy import real, imag, diff, hstack
-		from pylab import axis, plot
-		plot(real(zeros), imag(zeros), '+', markersize=10, **kwargs)
+		plt.plot(np.real(zeros), np.imag(zeros), '+', markersize=10, **kwargs)
 
 		# now we enlarge the graph a bit
-		zone = array(axis()).reshape(2,2)
-		padding = self.enlarge_coeff * diff(zone)
-		zone += hstack((-padding, padding))
-		axis(zone.reshape(-1))
+		zone = np.array(plt.axis()).reshape(2,2)
+		padding = self.enlarge_coeff * np.diff(zone)
+		zone += np.hstack((-padding, padding))
+		plt.axis(zone.reshape(-1))
 
 
 # note: The following class is a (bad) example of inheritance.
@@ -262,8 +271,7 @@ class TrigPolynomial (Polynomial):
 	"""
 
 	def __call__(self, theta):
-		from numpy import exp
-		return type(self).eval(self, exp(1j*theta))
+		return type(self).eval(self, np.exp(1j*theta))
 
 # just for a cleaner import we delete this decorator
 del cast_scalars
