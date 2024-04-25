@@ -15,6 +15,8 @@ p == p2 # True
 p.zeros() # list of zeros
 ```
 
+Check out the [associated notebook](https://gist.github.com/olivierverdier/d939d4e0b4de8fbd9c26328a834721ab).
+
 ## Testing
 
 Run:
