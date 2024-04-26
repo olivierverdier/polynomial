@@ -8,25 +8,26 @@ from polynomial import Polynomial, Zero, X, One
 # now come the tests
 # should always be put *in a different file*!
 
-# class method for testing
-@classmethod
-def random(cls, N=10, real=False):
+rng = np.random.default_rng()
+
+def get_random_polynomial(rng, N=10, real=False):
 	"""
 	Create a random polynomial of (random) degree <= N
 	Coefficients are in [-.5, .5] (+1j[-.5, .5])
 		real - whether the polynomial should have only real coefficients
 	"""
-	def random_coeffs(size):
-		return np.random.random([size]) - .5
-	degree = np.random.randint(N)
-	coeffs = random_coeffs(degree) + 1j*random_coeffs(degree)
+	degree = rng.integers(N)
+	coeff_mat = [rng.random(degree) - .5 for i in range(2)]
 	if real:
-		coeffs = coeffs.real
-	return cls(coeffs)
+		coeffs = coeff_mat[0]
+	else:
+		 coeffs = coeff_mat[0] + 1j*coeff_mat[1]
+	return Polynomial(coeffs)
 
-# add this class method dynamically
-Polynomial.random = random
-
+def test_init():
+	for p in [Polynomial(), Polynomial([]), Polynomial(np.array([]))]:
+		assert p == Zero
+		assert p.length() == 1
 
 
 class Test_ZeroOne(unittest.TestCase):
@@ -44,7 +45,7 @@ class Test_ZeroOne(unittest.TestCase):
 		self.assertEqual(One.degree(), 0)
 		self.assertEqual(X.degree(), 1)
 
-		r = np.random.random()
+		r = rng.random()
 		self.assertEqual(Zero(r), 0)
 		self.assertEqual(One(r), 1)
 		self.assertEqual(X(r), r)
@@ -125,7 +126,7 @@ class Test_One(unittest.TestCase):
 	def test_array_evaluation(self):
 		"Evaluation should work on arrays"
 		self.myLength = 10
-		self.myArray = np.random.rand(self.myLength)
+		self.myArray = rng.random(self.myLength)
 		self.assertIsInstance(self.p(self.myArray), np.ndarray)
 
 	def test_zeros(self):
@@ -152,11 +153,11 @@ class Test_X(Test_One):
 
 class Test_Random(Test_One):
 	def setUp(self):
-		self.p = Polynomial.random(real=True)
+		self.p = get_random_polynomial(rng, real=True)
 
 class Test_RandomComplex(Test_One):
 	def setUp(self):
-		self.p = Polynomial.random()
+		self.p = get_random_polynomial(rng)
 
 class Test_Simple(unittest.TestCase):
 	def test_Zero_zeros(self):
@@ -180,5 +181,5 @@ class Test_Simple(unittest.TestCase):
 		self.assertEqual(p1*p2, Polynomial([6., 4., 9., 6.]))
 
 
-if __name__ == '__main__':
-	unittest.main()
+# if __name__ == '__main__':
+# 	unittest.main()
